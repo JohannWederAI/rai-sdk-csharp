@@ -1,0 +1,124 @@
+// INDIRECT data injection
+//def json_string = """
+// [ {
+//   "id": 2001,
+//   "jobId": "fd9b7eb3-4b38-4b4a-ba78-30e491eff1c8",
+//   "entityId": 100930,
+//   "eyAccount": "11800",
+//   "clientAccount": "2007",
+//   "functionalAmount": 20000.65,
+//   "entryType": 1,
+//   "businessUnit": "cbf47eef-2fa5-4768-b462-41d9a685ae4c",
+//   "accountAttributeOverrides": {
+//     "Activity": "Rental Real Estate",
+//     "Asset Class": "Building Improvements"
+//   },
+//   "allocationAttributeOverrides": {
+//     "Date": "10/1/2021",
+//     "Asset Class": "Building Improvements"
+//   }
+// }
+// ]
+//"""
+//
+//def config[:data] = json_string
+//def journal_entries_json_data_1 = load_json[config]
+//def journal_entries_json = mapped_json[journal_entries_json_data_1, journal_entries_json_schema]
+
+
+// DIRECT data injection
+def journal_entries_json[:[], 1, :functionalAmount] = extract_decimal[20000.65]
+def journal_entries_json[:[], 1, :id] = 2001
+def journal_entries_json[:[], 1, :eyAccount] = "11800"
+def journal_entries_json[:[], 1, :entryType] = 1 
+def journal_entries_json[:[], 1, :clientAccount] = "2007"
+def journal_entries_json[:[], 1, :accountAttributeOverrides] =  
+    :Activity, "Rental Real Estate" ;
+    :"Asset Class", "Building Improvements"
+
+/*
+test j_entry_debit_credit
+*/
+
+ic j_entry_debit_credit_test {
+   equal(j_entry_debit_credit, (to_j_entry[2001], 3)) // will fail, it should be 2
+}
+
+//def output:j_entry_debit_credit_test:expected = ?
+//def output:j_entry_debit_credit_test:actual = ?
+//def output:j_entry_debit_credit_test:status = 'FAIL'
+
+/*
+test j_entry_fc_amount
+*/
+
+// will fail, should be 20000.65
+ic j_entry_fc_amount_test_fail {equal(j_entry_fc_amount, (to_j_entry[2001], extract_decimal[20000.7]))}
+
+// should succeed
+ic j_entry_fc_amount_test {equal(j_entry_fc_amount, (to_j_entry[2001], extract_decimal[20000.65]))}
+
+//def output:j_entry_fc_amount_test:actual = j_entry_fc_amount
+def output:j_entry_fc_amount_test:expected = extract_decimal[20000.65]
+
+/*
+test j_entry_client_account_map
+*/
+
+def jobBu_to_ey_client_account_mapping = 
+   "dummy_constant", "bu_hash_1", "ey_cl_acct_mapping_hash_1"    
+
+
+def ey_acct_from_acct_num = j_entry_extract_attr:eyAccount[to_j_entry[2001]], "ey_account_hash_1"
+
+def ey_cl_acct_map_ey_account = "ey_cl_acct_mapping_hash_1", "ey_account_hash_1"
+
+def j_entry_business_unit = to_j_entry[2001], "bu_hash_1"
+
+def ey_cl_acct_map_client_acct_map = "ey_cl_acct_mapping_hash_1", "client_number_hash_1"
+
+def client_acct_map_number = "client_number_hash_1", "2007"
+
+
+ic j_entry_client_account_map_test {
+ equal(j_entry_client_account_map, (to_j_entry[2001], "client_number_hash_1"))
+}
+
+/*
+test j_entry_ey_account
+*/
+
+ic j_entry_ey_account_test {
+ equal(j_entry_ey_account, (to_j_entry[2001], "ey_account_hash_1"))
+}
+
+/*
+test j_entry_type
+*/
+
+ic j_entry_type_test {
+ equal(j_entry_type, (to_j_entry[2001], 1))
+}
+
+
+
+// ic j_entry_account_attributes_test {
+//     j_entry_account_attributes
+// }
+
+// def to_business_unit = {
+//     parse_uuid["cbf47eef-2fa5-4768-b462-41d9a685ae4c"], "bu_entry_1"
+// }
+
+// def j_entry_job = {
+//     to_j_entry[2001], "job_entry_1"
+// }
+
+// def jobBu_allocation_attribute(job, bu, attr, val) {
+//     "job_entry_1", "bu_entry_1", 
+// }
+
+
+
+
+//def output = rel:catalog:ic_violations/tests/journal/journal_entry_test.rel

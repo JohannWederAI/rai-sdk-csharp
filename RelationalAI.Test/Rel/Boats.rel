@@ -1,0 +1,39 @@
+// Test data
+bound inbound_from_acquisitions = String, String, Float, RelName
+bound inbound_from_manufacturers = String, String, Float, RelName
+bound inventory_on_hand = String, String, Float, RelName
+bound inventory_on_hand = String, String, Int, RelName
+
+def inventory_on_hand {
+    ("Nordhavn", "N80", 82, :ft);
+    ("Bering", "B77", 85, :ft);
+    ("San Lorenzo","SL70", 70, :ft);
+    ("Ferretti", "680", 21.7, :m)
+}
+
+// Synthetic production code block (for testing)
+def boats_for_sale {
+    inbound_from_acquisitions;
+    inbound_from_manufacturers;
+    inventory_on_hand
+}
+
+
+// Test constraints
+ic boats_for_sale_cardinality {
+    count[boats_for_sale] = 4
+} 
+
+ic eighty_footers {
+    forall(l: boats_for_sale(_,_,l,_) implies l >= 80)
+} 
+
+ic only_feet {
+    forall(m: boats_for_sale(_,_,_,m) implies m = :ft)
+} 
+
+ic positive_values {
+  forall(l: boats_for_sale(_,_,l,_) implies l >= 0)
+} 
+
+def output = boats_for_sale

@@ -1,0 +1,154 @@
+/*
+ * Extract journal entries from json.
+ */
+entity JournalEntry to_j_entry = journal_entries_json[:[], _, :id]
+
+def j_entry_id = transpose[to_j_entry]
+
+def j_entry_idt[j_entry in JournalEntry] = j_entry
+
+def j_entry_fc_amount = j_entry_extract_attr:functionalAmount
+
+def j_entry_business_unit[j_entry] = j_entry_extract_attr:businessUnit[j_entry].to_business_unit
+
+def normalized_bunit_ey_cl_mapping(bu, map) = jobBu_to_ey_client_account_mapping(_, bu, map)
+
+def j_entry_same_ey_acct_mapping(entry, map) {
+    ey_cl_acct_map_ey_account[map] = j_entry_ey_account[entry] 
+}
+
+def j_entry_ey_client_account_mapping(j_entry, ey_cl_mapping) {
+    normalized_bunit_ey_cl_mapping(b_unit, ey_cl_mapping) and
+    j_entry_same_ey_acct_mapping(j_entry, ey_cl_mapping) and
+    j_entry_business_unit(j_entry, b_unit)
+    from b_unit
+}
+
+def j_entry_client_account_map(j_entry, cam) {
+    j_entry_ey_client_account_mapping(j_entry, ey_cl_mapping) and
+    ey_cl_acct_map_client_acct_map(ey_cl_mapping, cam) and
+    client_acct_map_number(cam, num) and
+    j_entry_extract_attr:clientAccount(j_entry, num)
+    from ey_cl_mapping, num
+}
+
+def j_entry_ey_account[j] = ey_acct_from_acct_num[j_entry_extract_attr:eyAccount[j]]
+
+def j_entry_entity_id = j_entry_extract_attr:entityId
+
+def j_entry_job_id = j_entry_extract_attr:jobId
+
+def j_entry_job(j_entry, job) {
+    job = j_entry_job_id[j_entry].to_job
+}
+
+@inline
+def j_entry_account_attributes_format(j_entry, attr_sym, val_str) {
+    j_entry_account_attributes(j_entry, attr, val) and
+    account_attr_val_str[val] = val_str and
+    account_attr_symbol[attr] = attr_sym
+    from attr, val
+}
+
+@inline
+def j_entry_allocation_attributes_format(j_entry, attr_sym, val_str) {
+    j_entry_allocation_attributes(j_entry, attr, val) and
+    allocation_attr_val_str[val] = val_str and
+    allocation_attr_symbol[attr] = attr_sym
+    from attr, val
+}
+
+
+
+def j_entry_default_account_attributes(entry, attr, val) {
+    not exists j_entry_default_client_account_attributes[entry, attr] and
+    j_entry_default_ey_account_attributes(entry, attr, val)
+}
+
+def j_entry_default_account_attributes(entry, attr, val) {
+    j_entry_default_client_account_attributes[entry, attr] = val
+}
+
+def j_entry_default_client_account_attributes(entry, attr, val) {
+    j_entry_client_account_map(entry, cam) and
+    client_acct_map_client_account_default_attributes(cam, attr, val)
+    from cam
+}
+
+def j_entry_default_ey_account_attributes(entry, attr, val) {
+    ey_acct_default_attributes(ea, attr, val) and
+    ea = j_entry_ey_account[entry]
+    from ea
+}
+
+def j_entry_account_attributes(j_entry, attr, val) {
+    val = to_account_attr_val[val_str] and
+    attr = to_account_attr[attr_str] and
+    j_entry_account_attributes_raw_str(j_entry, attr_str, val_str)
+    from attr_str, val_str
+}
+
+def j_entry_allocation_attributes(j_entry, attr, val) {
+    val = to_allocation_attr_val[val_str] and
+    attr = to_allocation_attr[attr_str] and
+    j_entry_allocation_attributes_raw_str(j_entry, attr_str, val_str)
+    from attr_str, val_str
+}
+
+def j_entry_allocation_attributes(entry in JournalEntry, attr, val) {
+    not exists (j_entry_allocation_attributes_raw_str[entry, attr_str]) and
+    attr = to_allocation_attr[attr_str] and
+    j_entry_default_allocation_attributes(entry, attr, val)
+    from attr_str
+}
+
+//for journal entries (not tiered entries), compute from defaults if doesn't come from Extract
+def j_entry_account_attributes(entry in JournalEntry, attr, val) {
+    not exists (j_entry_account_attributes_raw_str[entry, attr_str]) and
+    attr = to_account_attr[attr_str] and
+    j_entry_default_account_attributes(entry, attr, val)
+    from attr_str
+}
+
+def j_entry_account_attributes_raw_str(entry, attr_str, val_str) {
+    j_entry_extract_attr:accountAttributeOverrides(entry, attr_sym, val_str) and
+    relname_string[attr_sym] = attr_str
+    from attr_sym
+}
+
+def j_entry_allocation_attributes_raw_str(entry, attr_str, val_str) {
+    j_entry_extract_attr:allocationAttributeOverrides(entry, attr_sym, val_str) and
+    relname_string[attr_sym] = attr_str
+    from attr_sym
+}
+
+def j_entry_default_allocation_attributes(j_entry, attr, val) {
+    j_entry_job[j_entry] = job and
+    j_entry_business_unit[j_entry] = bu and
+    jobBu_allocation_attribute(job, bu, attr, val) 
+    from job, bu
+}
+
+def j_entry_source = JournalEntry, TAXABLE_INCOME_SRC
+
+def j_entry_type = j_entry_extract_attr:entryType
+
+def j_entry_business_unit_name[j_entry] = j_entry_business_unit[j_entry].business_unit_name
+
+def j_entry_debit_credit = extract_amount_type[j_entry_fc_amount]
+
+def j_entry_job_idt[j_entry] = j_entry_job[j_entry].job_identifier
+
+@inline
+def j_entry_extract_attr[A](j_entry, val...) {
+    journal_entries_json(:[], idx, A, val...) and
+    journal_entries_json[:[], idx, :id].to_j_entry = j_entry
+    from idx
+}
+
+@inline
+def invalid(entry in JournalEntry) {
+    count[j_entry_rate[entry]] != 1 or
+    count[j_entry_fc_amount[entry]] != 1 or
+    count[j_entry_rc_amount[entry]] != 1
+}

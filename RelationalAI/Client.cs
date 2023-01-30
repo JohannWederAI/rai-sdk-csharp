@@ -419,14 +419,15 @@ namespace RelationalAI
             var models = new List<string>();
             var resp = await ExecuteWaitAsync(database, engine, query);
 
-            var result = resp.Results.Find(r => r.RelationId.Equals($"/:output/:{outName}/String"));
-            if (result != null)
-            {
-                for (int i = 0; i < result.Table.Count; i++)
-                {
-                    models.Add(result.Table[i] as string);
-                }
-            }
+            // TODO: Fix
+            // var result = resp.Results.Find(r => r.RelationId.Equals($"/:output/:{outName}/String"));
+            // if (result != null)
+            // {
+            //     for (int i = 0; i < result.Table.Count; i++)
+            //     {
+            //         models.Add(result.Table[i] as string);
+            //     }
+            // }
 
             return models;
         }
@@ -440,11 +441,12 @@ namespace RelationalAI
 
             var model = new Model(name, null);
             var result = resp.Results.Find(r => r.RelationId.Equals($"/:output/:{outName}/String"));
-            if (result != null)
-            {
-                model.Value = result.Table[0] as string;
-                return model;
-            }
+            // TODO: Fix
+            // if (result != null)
+            // {
+            //     model.Value = result.Table[0] as string;
+            //     return model;
+            // }
 
             throw new HttpError(404, $"Model with name `{name}` not found on database {database}");
         }

@@ -48,7 +48,7 @@ namespace RelationalAI
 
         private static Dictionary<string, object> ReadConfigFromInitData(IniData data, string profile)
         {
-            string[] keys = { "host", "port", "scheme", "region" };
+            string[] keys = { "host", "port", "scheme", "region", "engine", "database" };
             var config = keys
                 .ToDictionary<string, string, object>(key => key, key => GetIniValue(data, profile, key, null));
 

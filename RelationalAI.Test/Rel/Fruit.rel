@@ -1,0 +1,7 @@
+def output {
+    (:fruit, :apple);
+    (:fruit, :orange);
+    (:veg, :carrot);
+    (:veg, :pea);
+    (:fruit, :banana)
+}

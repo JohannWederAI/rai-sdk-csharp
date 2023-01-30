@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -15,6 +15,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RelationalAI\RelationalAI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Rel\Fruit.rel" />
+    <None Remove="Use\journal_entry.rel" />
+    <EmbeddedResource Include="Use\journal_entry.rel" />
+    <None Remove="Use\journal_entry.test.rel" />
+    <EmbeddedResource Include="Use\journal_entry.test.rel" />
+    <None Remove="Rel\Boats.rel" />
+    <EmbeddedResource Include="Rel\Boats.rel" />
+    <None Remove="Use\common.rel" />
+    <EmbeddedResource Include="Use\common.rel" />
   </ItemGroup>
 
 </Project>

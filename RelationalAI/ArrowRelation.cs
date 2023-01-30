@@ -16,12 +16,13 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Apache.Arrow;
 
 namespace RelationalAI
 {
     public class ArrowRelation : Entity
     {
-        public ArrowRelation(string relationId, List<object> table)
+        public ArrowRelation(string relationId, RecordBatch table)
         {
             RelationId = relationId;
             Table = table;
@@ -29,13 +30,14 @@ namespace RelationalAI
 
         public string RelationId { get; }
 
-        public List<object> Table { get; }
+        public RecordBatch Table { get; }
 
         public override bool Equals(object obj)
         {
             if (obj is ArrowRelation arrowRelation)
             {
-                return RelationId == arrowRelation.RelationId && Table.SequenceEqual(arrowRelation.Table);
+                return RelationId == arrowRelation.RelationId
+                       && Table.Equals(arrowRelation.Table);
             }
 
             return false;

@@ -1,0 +1,180 @@
+/**
+  * This file declares common relations, including those that involving
+  * intersections.
+  */
+
+/**
+  * Intersection I *refines* intersection J if for every attribute/value
+  * pair in J, I binds that attribute to that value.
+  */
+@inline
+def refines[I, J] = count[attr: I(attr, val) and J(attr, val) from val] = count[J]
+
+@inline
+def refines_signature[S, T] = count[attr: S(attr) and T(attr)] = count[T]
+
+@inline
+def matches[I, J] = count[attr: I(attr, val) and J(attr, val) from val] = count[J] = count[I]
+
+/**
+  * Given a source intersection I and a sequence O of target intersections,
+  * materializes, for each key k in dom(O), the intersection formed by
+  * overriding I by O[k]
+  */
+@inline
+def override[I, O](key, attr, val) {
+    O(key, attr, val)
+    or
+    O(key, _, _) and I(attr, val) and not O(key, attr, _)
+}
+
+@inline
+def override_single[I, O](attr, val) {
+    O(attr, val) or
+    O(_, _) and I(attr, val) and not O(attr, _)
+}
+
+@inline
+def override_single[I, O](a, v) =
+    I(a, v) and not O(_,_)
+
+/**
+  * Strict version of override that prevents resulting intersections
+  * from ranging over attributes that are not in dom(I)
+  *
+  * Ensures: dom(O[_]) subseteq dom(I)
+  */
+@inline
+def strict_override[I, O](key, attr, val) {
+    override[I, O](key, attr, val) and
+    I(attr, _)
+}
+
+/********************************************
+ * Helper stuff to assist with exporting CSV.
+ ********************************************/
+
+@inline
+def csv_header[H][:syntax, :header] = H
+
+@inline
+def header_contains[H](col) = H(:syntax, :header, _, col)
+
+/*
+ * A helper function that takes a label and a binary rel (key-val rel).
+ * The latter in the form: [anytype(key), anytype(val)], where the first column
+ * expected to be a key.
+ *
+ * Returns a ternary rel representing a CSV column: [anytype(key), Symbol, anytype(val)].
+ */
+@inline
+def csv_column[N, R](pos..., col, val) =
+    col = N and R(pos..., val)
+
+@inline
+def negative(val) {
+    val < 0
+}
+
+@inline
+def non_negative(val) {
+    val >= 0
+}
+
+@inline
+def guid_value[R](e, v2) {
+    R(e, v1) and
+    v2 = uuid_string[v1]
+    from v1
+}
+
+@inline
+def valid(e) {
+    not exists invalid(e)
+}
+
+/**
+  * non-Account attributes of an intersection
+  */
+@inline
+def non_account_attributes[I](attr, val) {
+    I(attr, val) and not I(:ClientAcct, val)
+}
+
+@inline
+def extract_amount_type_reverse[R](entry, entry_type) {
+    R[entry].non_negative and
+    entry_type = debit_type
+    or
+    R[entry].negative and
+    entry_type = credit_type
+}
+
+@inline
+def extract_amount_type[R](entry, entry_type) {
+    R[entry].non_negative and
+    entry_type = credit_type
+    or
+    R[entry].negative and
+    entry_type = debit_type
+}
+
+@inline
+def extract_decimal[v] = decimal[128, 4, v]
+
+def decimal_zero = extract_decimal[0]
+def decimal_one = extract_decimal[1]
+
+@inline
+def extract_json[R, I, A](:[], idx, attr, val...) {
+    R(e, val...) and
+    I(e, idx) and
+    attr = A
+    from e
+}
+
+@inline
+def extract_entity_json[R, I, A](e, :[], idx, attr, val...) {
+    R(e, val...) and
+    I(e, idx) and
+    attr = A
+}
+
+@inline
+def extract_nested_json[I, A, L, R, NI, NA](:[], idx, attr, val...) {
+    I(e, idx) and
+    A(attr) and
+    L(e, n_e) and
+    extract_entity_json[R, NI, NA](n_e, val...)
+    from e, n_e
+}
+
+@inline
+def mapped_json[JSON, SCHEMA](xs..., attr, v2) {
+    JSON(xs..., attr, v1) and 
+    RelName(attr) and    
+    SCHEMA(attr, v1, v2)
+    from v1
+}
+
+@inline
+def mapped_json[JSON, SCHEMA](xs..., attr, :[], idx, v2) {
+    JSON(xs..., attr, :[], idx, v1) and 
+    RelName(attr) and    
+    SCHEMA(attr, v1, v2)
+    from v1
+}
+
+@inline
+def mapped_json[JSON, SCHEMA](xs..., attr, :[], idx, v1) {
+    JSON(xs..., attr, :[], idx, v1) and 
+    RelName(attr) and    
+    not SCHEMA(attr, v1, _)
+}
+
+@inline
+def mapped_json[JSON, SCHEMA](xs..., attr, v1) {
+    JSON(xs..., attr, v1) and
+    RelName(attr) and
+    not SCHEMA(attr, v1, _)
+}

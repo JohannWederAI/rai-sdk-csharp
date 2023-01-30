@@ -1,0 +1,1 @@
+def output:model[name] = rel:catalog:model(name, _)
