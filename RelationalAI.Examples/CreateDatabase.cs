@@ -10,15 +10,10 @@ namespace RelationalAI.Examples
     {
         public static Command GetCommand()
         {
-            var cmd = new Command("CreateDatabase", "--database <Database name> --engine <Engine name> --profile <Profile name>"){
+            var cmd = new Command("CreateDatabase", "--database <Database name> --profile <Profile name>"){
                 new Option<string>("--database"){
                     IsRequired = true,
                     Description = "database name to create."
-                },
-
-                new Option<string>("--engine"){
-                    IsRequired = true,
-                    Description = "Engine name to use."
                 },
 
                 new Option<string>("--profile"){
@@ -27,17 +22,17 @@ namespace RelationalAI.Examples
                 }
             };
             cmd.Description = "Creates a new database.";
-            cmd.Handler = CommandHandler.Create<string, string, string>(Run);
+            cmd.Handler = CommandHandler.Create<string, string>(Run);
             return cmd;
         }
 
-        private static async Task Run(string database, string engine, string profile = "default")
+        private static async Task Run(string database, string profile = "default")
         {
             var config = Config.Read("", profile);
             var context = new Client.Context(config);
             var client = new Client(context);
             Console.WriteLine("Creating Database: " + database);
-            Console.WriteLine(await client.CreateDatabaseAsync(database, engine));
+            Console.WriteLine(await client.CreateDatabaseAsync(database));
         }
 
     }

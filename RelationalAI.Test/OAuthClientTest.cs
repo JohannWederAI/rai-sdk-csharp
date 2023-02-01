@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace RelationalAI.Test
@@ -14,21 +15,25 @@ namespace RelationalAI.Test
         {
             var client = CreateClient();
 
-            await Assert.ThrowsAsync<HttpError>(async () => await client.FindOAuthClientAsync(OAuthClientName));
+            await client
+                .Invoking(c => c.FindOAuthClientAsync(OAuthClientName))
+                .Should().ThrowAsync<HttpError>();
 
             var rsp = await client.CreateOAuthClientAsync(OAuthClientName);
-            Assert.Equal(OAuthClientName, rsp.Name);
+            rsp.Name.Should().Be(OAuthClientName);
 
             var clientId = rsp.Id;
 
             rsp = await client.GetOAuthClientAsync(clientId);
-            Assert.Equal(clientId, rsp.Id);
-            Assert.Equal(OAuthClientName, rsp.Name);
+            rsp.Id.Should().Be(clientId);
+            rsp.Name.Should().Be(OAuthClientName);
 
             var deleteRsp = await client.DeleteOAuthClientAsync(clientId);
-            Assert.Equal(clientId, deleteRsp.Id);
+            deleteRsp.Id.Should().Be(clientId);
 
-            await Assert.ThrowsAsync<HttpError>(async () => await client.GetOAuthClientAsync(clientId));
+            await client
+                .Invoking(c => c.GetOAuthClientAsync(clientId))
+                .Should().ThrowAsync<HttpError>();
         }
 
         public override async Task DisposeAsync()

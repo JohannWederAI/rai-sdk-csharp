@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace RelationalAI.Test
@@ -22,19 +24,20 @@ namespace RelationalAI.Test
             var client = CreateClient();
 
             await engineFixture.CreateEngineWaitAsync();
+            engineFixture.Engine.State.Should().Be(EngineStates.Provisioned);
             await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
 
             var query = "x, x^2, x^3, x^4 from x in {1; 2; 3; 4; 5}";
             var rsp = await client.ExecuteV1Async(Dbname, engineFixture.Engine.Name, query, true);
 
-            Assert.False(rsp.Aborted);
+            rsp.Aborted.Should().BeFalse();
             var output = rsp.Output;
-            Assert.Single(output);
+            output.Should().HaveCount(1);
             var relation = output[0];
             var relKey = relation.RelKey;
-            Assert.Equal("output", relKey.Name);
-            Assert.Equal(relKey.Keys, new[] { "Int64", "Int64", "Int64" });
-            Assert.Equal(relKey.Values, new[] { "Int64" });
+            relKey.Name.Should().Be("output");
+            relKey.Keys.Should().Equal(new[] { "Int64", "Int64", "Int64" });
+            relKey.Values.Should().Equal(new[] { "Int64" });
             var columns = relation.Columns;
             var expected = new[]
             {
@@ -44,7 +47,7 @@ namespace RelationalAI.Test
                 new object[] {1L, 16L, 81L, 256L, 625L}
             };
 
-            Assert.Equal(expected, columns);
+            columns.Should().Equal(expected, (l, r) => l.SequenceEqual(r));
         }
 
         public override async Task DisposeAsync()

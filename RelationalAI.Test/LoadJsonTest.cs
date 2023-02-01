@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace RelationalAI.Test
@@ -28,34 +30,44 @@ namespace RelationalAI.Test
             var client = CreateClient();
 
             await engineFixture.CreateEngineWaitAsync();
+            engineFixture.Engine.State.Should().Be(EngineStates.Provisioned);
+
             await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
 
             var loadRsp = await client.LoadJsonAsync(Dbname, engineFixture.Engine.Name, "sample", Sample);
-            Assert.False(loadRsp.Aborted);
-            Assert.Empty(loadRsp.Output);
-            Assert.Empty(loadRsp.Problems);
+            loadRsp.Aborted.Should().BeFalse();
+            loadRsp.Output.Should().HaveCount(0);
+            loadRsp.Problems.Should().HaveCount(0);
 
             var rsp = await client.ExecuteV1Async(Dbname, engineFixture.Engine.Name, "def output = sample");
 
             var rel = FindRelation(rsp.Output, ":name");
-            Assert.NotNull(rel);
-            Assert.Single(rel.Columns);
-            Assert.Equal(new[] { new object[] { "Amira" } }, rel.Columns);
+            rel.Should().NotBeNull();
+            rel.Columns.Should().HaveCount(1);
+            rel.Columns.Should().Equal(new[] { new object[] { "Amira" } },
+                (l, r) => l.SequenceEqual(r)
+            );
 
             rel = FindRelation(rsp.Output, ":age");
-            Assert.NotNull(rel);
-            Assert.Single(rel.Columns);
-            Assert.Equal(new[] { new object[] { 32L } }, rel.Columns);
+            rel.Should().NotBeNull();
+            rel.Columns.Should().HaveCount(1);
+            rel.Columns.Should().Equal(new[] { new object[] { 32L } },
+                (l, r) => l.SequenceEqual(r)
+            );
 
             rel = FindRelation(rsp.Output, ":height");
-            Assert.NotNull(rel);
-            Assert.Single(rel.Columns);
-            Assert.Equal(new[] { new object[] { null } }, rel.Columns);
+            rel.Should().NotBeNull();
+            rel.Columns.Should().HaveCount(1);
+            rel.Columns.Should().Equal(new[] { new object[] { null } },
+                (l, r) => l.SequenceEqual(r)
+            );
 
             rel = FindRelation(rsp.Output, ":pets");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(new[] { new object[] { 1L, 2L }, new object[] { "dog", "rabbit" } }, rel.Columns);
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[] { new object[] { 1L, 2L }, new object[] { "dog", "rabbit" } },
+                (l, r) => l.SequenceEqual(r)
+            );
         }
 
         public override async Task DisposeAsync()

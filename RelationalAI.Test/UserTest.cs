@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
 
 namespace RelationalAI.Test
@@ -16,45 +16,47 @@ namespace RelationalAI.Test
         {
             var client = CreateClient();
 
-            await Assert.ThrowsAsync<HttpError>(async () => await client.FindUserAsync(UserEmail));
+            await client
+                .Invoking(c => c.FindUserAsync(UserEmail))
+                .Should().ThrowAsync<HttpError>();
 
             var rsp = await client.CreateUserAsync(UserEmail);
-            Assert.Equal(UserEmail, rsp.Email);
-            Assert.Equal(UserStatus.Active, rsp.Status);
-            Assert.True(new List<Role> { Role.User }.SequenceEqual(rsp.Roles));
+            rsp.Email.Should().Be(UserEmail);
+            rsp.Status.Should().Be(UserStatus.Active);
+            rsp.Roles.Should().Equal(new List<Role> { Role.User });
 
             var user = await client.GetUserAsync(rsp.Id);
             var userId = user.Id;
-            Assert.Equal(user.Id, rsp.Id);
-            Assert.Equal(UserEmail, user.Email);
+            rsp.Id.Should().Be(user.Id);
+            user.Email.Should().Be(UserEmail);
 
             rsp = await client.GetUserAsync(userId);
-            Assert.Equal(userId, rsp.Id);
-            Assert.Equal(UserEmail, rsp.Email);
+            rsp.Id.Should().Be(userId);
+            rsp.Email.Should().Be(UserEmail);
 
             rsp = await client.DisableUserAsync(userId);
-            Assert.Equal(userId, rsp.Id);
-            Assert.Equal(UserStatus.InActive, rsp.Status);
+            rsp.Id.Should().Be(userId);
+            rsp.Status.Should().Be(UserStatus.InActive);
 
             rsp = await client.UpdateUserAsync(userId, UserStatus.InActive);
-            Assert.Equal(userId, rsp.Id);
-            Assert.Equal(UserStatus.InActive, rsp.Status);
+            rsp.Id.Should().Be(userId);
+            rsp.Status.Should().Be(UserStatus.InActive);
 
             rsp = await client.UpdateUserAsync(userId, UserStatus.Active);
-            Assert.Equal(userId, rsp.Id);
-            Assert.Equal(UserStatus.Active, rsp.Status);
+            rsp.Id.Should().Be(userId);
+            rsp.Status.Should().Be(UserStatus.Active);
 
             rsp = await client.UpdateUserAsync(userId, roles: new List<Role> { Role.Admin, Role.User });
-            Assert.Equal(userId, rsp.Id);
-            Assert.True(new List<Role> { Role.Admin, Role.User }.SequenceEqual(rsp.Roles));
+            rsp.Id.Should().Be(userId);
+            rsp.Roles.Should().Equal(new List<Role> { Role.Admin, Role.User });
 
             rsp = await client.UpdateUserAsync(userId, UserStatus.InActive, new List<Role> { Role.User });
-            Assert.Equal(userId, rsp.Id);
-            Assert.True(new List<Role> { Role.User }.SequenceEqual(rsp.Roles));
+            rsp.Id.Should().Be(userId);
+            rsp.Roles.Should().Equal(new List<Role> { Role.User });
 
             // cleanup
             await client.DeleteUserAsync(userId);
-            Assert.Equal(userId, rsp.Id);
+            rsp.Id.Should().Be(userId);
         }
 
         public override async Task DisposeAsync()

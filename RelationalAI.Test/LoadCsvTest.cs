@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+using FluentAssertions;
 using Xunit;
 
 namespace RelationalAI.Test
@@ -31,61 +33,61 @@ namespace RelationalAI.Test
             var client = CreateClient();
 
             await engineFixture.CreateEngineWaitAsync();
+            engineFixture.Engine.State.Should().Be(EngineStates.Provisioned);
             await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
 
             var loadRsp = await client.LoadCsvAsync(Dbname, engineFixture.Engine.Name, "sample", Sample);
-            Assert.False(loadRsp.Aborted);
-            Assert.Empty(loadRsp.Output);
-            Assert.Empty(loadRsp.Problems);
+            loadRsp.Aborted.Should().BeFalse();
+            loadRsp.Output.Should().HaveCount(0);
+            loadRsp.Problems.Should().HaveCount(0);
 
             var rsp = await client.ExecuteV1Async(Dbname, engineFixture.Engine.Name, "def output = sample");
 
             var rel = FindRelation(rsp.Output, ":date");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"2020-01-01", "2020-02-02", "2020-03-03", "2020-04-04"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
             rel = FindRelation(rsp.Output, ":price");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"12.50", "14.25", "11.00", "12.25"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
             rel = FindRelation(rsp.Output, ":quantity");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"2", "4", "4", "3"}
                 },
-                rel.Columns
-            );
+                (l, r) => l.SequenceEqual(r)
+             );
 
             rel = FindRelation(rsp.Output, ":cocktail");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"martini", "sazerac", "cosmopolitan", "bellini"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
         }
 
@@ -101,63 +103,61 @@ namespace RelationalAI.Test
             var client = CreateClient();
 
             await engineFixture.CreateEngineWaitAsync();
+            engineFixture.Engine.State.Should().Be(EngineStates.Provisioned);
+
             await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
 
             var opts = new CsvOptions().WithHeaderRow(0);
             var loadRsp = await client.LoadCsvAsync(Dbname, engineFixture.Engine.Name, "sample_no_header", SampleNoHeader, opts);
-            Assert.False(loadRsp.Aborted);
-            Assert.Empty(loadRsp.Output);
-            Assert.Empty(loadRsp.Problems);
+            loadRsp.Aborted.Should().BeFalse();
+            loadRsp.Output.Should().HaveCount(0);
+            loadRsp.Problems.Should().HaveCount(0);
 
             var rsp = await client.ExecuteV1Async(Dbname, engineFixture.Engine.Name, "def output = sample_no_header");
 
             var rel = FindRelation(rsp.Output, ":COL1");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {1L, 2L, 3L, 4L},
                     new object[] {"martini", "sazerac", "cosmopolitan", "bellini"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
-
             rel = FindRelation(rsp.Output, ":COL2");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {1L, 2L, 3L, 4L},
                     new object[] {"2", "4", "4", "3"}
                 },
-                rel.Columns
-            );
+                (l, r) => l.SequenceEqual(r)
+             );
 
             rel = FindRelation(rsp.Output, ":COL3");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {1L, 2L, 3L, 4L},
                     new object[] {"12.50", "14.25", "11.00", "12.25"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
             rel = FindRelation(rsp.Output, ":COL4");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {1L, 2L, 3L, 4L},
                     new object[] {"2020-01-01", "2020-02-02", "2020-03-03", "2020-04-04"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
         }
 
@@ -174,62 +174,60 @@ namespace RelationalAI.Test
             var client = CreateClient();
 
             await engineFixture.CreateEngineWaitAsync();
+            engineFixture.Engine.State.Should().Be(EngineStates.Provisioned);
+
             await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
 
             var opts = new CsvOptions().WithDelim('|').WithQuoteChar('\'');
             var loadRsp = await client.LoadCsvAsync(Dbname, engineFixture.Engine.Name, "sample_alt_syntax", SampleAltSyntax, opts);
-            Assert.False(loadRsp.Aborted);
-            Assert.Empty(loadRsp.Output);
-            Assert.Empty(loadRsp.Problems);
+            loadRsp.Aborted.Should().BeFalse();
+            loadRsp.Output.Should().HaveCount(0);
+            loadRsp.Problems.Should().HaveCount(0);
 
             var rsp = await client.ExecuteV1Async(Dbname, engineFixture.Engine.Name, "def output = sample_alt_syntax");
 
             var rel = FindRelation(rsp.Output, ":date");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"2020-01-01", "2020-02-02", "2020-03-03", "2020-04-04"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
             rel = FindRelation(rsp.Output, ":price");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"12.50", "14.25", "11.00", "12.25"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
             rel = FindRelation(rsp.Output, ":quantity");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"2", "4", "4", "3"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
 
             rel = FindRelation(rsp.Output, ":cocktail");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"martini", "sazerac", "cosmopolitan", "bellini"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
         }
 
@@ -239,6 +237,8 @@ namespace RelationalAI.Test
             var client = CreateClient();
 
             await engineFixture.CreateEngineWaitAsync();
+            engineFixture.Engine.State.Should().Be(EngineStates.Provisioned);
+
             await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
 
             var schema = new Dictionary<string, string>
@@ -251,67 +251,63 @@ namespace RelationalAI.Test
 
             var opts = new CsvOptions().WithSchema(schema);
             var loadRsp = await client.LoadCsvAsync(Dbname, engineFixture.Engine.Name, "sample", Sample, opts);
-            Assert.False(loadRsp.Aborted);
-            Assert.Empty(loadRsp.Output);
-            Assert.Empty(loadRsp.Problems);
+            loadRsp.Aborted.Should().BeFalse();
+            loadRsp.Output.Should().HaveCount(0);
+            loadRsp.Problems.Should().HaveCount(0);
 
             var rsp = await client.ExecuteV1Async(Dbname, engineFixture.Engine.Name, "def output = sample");
 
             var rel = FindRelation(rsp.Output, ":date");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"2020-01-01", "2020-02-02", "2020-03-03", "2020-04-04"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
-            Assert.Single(rel.RelKey.Values);
-            Assert.Equal("Dates.Date", rel.RelKey.Values[0]);
 
+            rel.RelKey.Values.Should().HaveCount(1);
+            rel.RelKey.Values[0].Should().Be("Dates.Date");
             rel = FindRelation(rsp.Output, ":price");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {12.5, 14.25, 11.00, 12.25}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
-            Assert.Single(rel.RelKey.Values);
-            Assert.Equal("FixedPointDecimals.FixedDecimal{Int64, 2}", rel.RelKey.Values[0]);
+            rel.RelKey.Values.Should().HaveCount(1);
+            rel.RelKey.Values[0].Should().Be("FixedPointDecimals.FixedDecimal{Int64, 2}");
 
             rel = FindRelation(rsp.Output, ":quantity");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {2L, 4L, 4L, 3L}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
-            Assert.Single(rel.RelKey.Values);
-            Assert.Equal("Int64", rel.RelKey.Values[0]);
+            rel.RelKey.Values.Should().HaveCount(1);
+            rel.RelKey.Values[0].Should().Be("Int64");
 
             rel = FindRelation(rsp.Output, ":cocktail");
-            Assert.NotNull(rel);
-            Assert.Equal(2, rel.Columns.Length);
-            Assert.Equal(
-                new[]
+            rel.Should().NotBeNull();
+            rel.Columns.Length.Should().Be(2);
+            rel.Columns.Should().Equal(new[]
                 {
                     new object[] {2L, 3L, 4L, 5L},
                     new object[] {"martini", "sazerac", "cosmopolitan", "bellini"}
                 },
-                rel.Columns
+                (l, r) => l.SequenceEqual(r)
             );
-            Assert.Single(rel.RelKey.Values);
-            Assert.Equal("String", rel.RelKey.Values[0]);
+            rel.RelKey.Values.Should().HaveCount(1);
+            rel.RelKey.Values[0].Should().Be("String");
         }
 
         public override async Task DisposeAsync()

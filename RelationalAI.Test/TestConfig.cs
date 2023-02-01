@@ -44,8 +44,8 @@ namespace RelationalAI.Test
                 semaphoreSlim.Release();
             }
 
-            return _engine;
 
+            return _engine;
         }
 
         public Engine Engine

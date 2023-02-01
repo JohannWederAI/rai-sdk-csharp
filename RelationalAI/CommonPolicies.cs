@@ -99,7 +99,7 @@ namespace RelationalAI
                 .Handle<HttpRequestException>()
 
                 // Server error response received (5xx status code, etc.)
-                .Or<HttpError>()
+                .Or<HttpError>(e => e.StatusCode >= 500)
 
                 // Retry 5 times with overheadRate param of the time the transaction has been running so far
                 // And rethrow the exception.
