@@ -411,46 +411,6 @@ namespace RelationalAI
             return await ExecuteWaitAsync(database, engine, string.Join('\n', queries), false, queriesInputs);
         }
 
-        public async Task<List<string>> ListModelsAsync(string database, string engine)
-        {
-            var outName = $"models_{new Random().Next(int.MaxValue)}";
-            var query = $"def output:{outName}[name] = rel:catalog:model(name, _)";
-
-            var models = new List<string>();
-            var resp = await ExecuteWaitAsync(database, engine, query);
-
-            // TODO: Fix
-            // var result = resp.Results.Find(r => r.RelationId.Equals($"/:output/:{outName}/String"));
-            // if (result != null)
-            // {
-            //     for (int i = 0; i < result.Table.Count; i++)
-            //     {
-            //         models.Add(result.Table[i] as string);
-            //     }
-            // }
-
-            return models;
-        }
-
-        public async Task<Model> GetModelAsync(string database, string engine, string name)
-        {
-            var outName = $"model_{new Random().Next(int.MaxValue)}";
-            var query = $"def output:{outName} = rel:catalog:model[\"{name}\"]";
-
-            var resp = await ExecuteWaitAsync(database, engine, query);
-
-            var model = new Model(name, null);
-            var result = resp.Results.Find(r => r.RelationId.Equals($"/:output/:{outName}/String"));
-            // TODO: Fix
-            // if (result != null)
-            // {
-            //     model.Value = result.Table[0] as string;
-            //     return model;
-            // }
-
-            throw new HttpError(404, $"Model with name `{name}` not found on database {database}");
-        }
-
         public async Task<TransactionAsyncResult> DeleteModelsAsync(string database, string engine, List<string> models)
         {
             var queries = new List<string>();

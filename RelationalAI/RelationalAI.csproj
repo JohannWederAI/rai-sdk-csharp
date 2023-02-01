@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Version>0.9.9-alpha</Version>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageId>RAI</PackageId>
     <Authors>RelationalAI</Authors>
     <Company>RelationalAI</Company>
@@ -40,6 +40,11 @@
     <PackageReference Include="Microsoft.Data.Analysis" Version="0.19.0" />
     <PackageReference Include="Google.Protobuf" Version="3.19.0" />
     <PackageReference Include="Google.Protobuf.Tools" Version="3.19.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Rel\GetModel.rel" />
+    <EmbeddedResource Include="Rel\GetModels.rel" />
   </ItemGroup>
 
   <Target Name="protogen" BeforeTargets="BeforeBuild">

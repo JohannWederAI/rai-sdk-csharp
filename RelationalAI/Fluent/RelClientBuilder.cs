@@ -62,17 +62,19 @@ namespace RelationalAI.Fluent
                 .WithDatabase(database);
         }
 
+        public string EngineName => _engineName;
+
+        public string DatabaseName => _databaseName;
+
         public INeedDatabase WithEngine(string name)
         {
             _engineName = name;
-            // _engine = _client.GetEngineAsync(name).GetAwaiter().GetResult();
             return this;
         }
 
         public RelClientBuilder WithDatabase(string name)
         {
             _databaseName = name;
-            // _database = _client.GetDatabaseAsync(name).GetAwaiter().GetResult();
             return this;
         }
 
@@ -88,34 +90,15 @@ namespace RelationalAI.Fluent
             return Query(query).Then(withResult);
         }
 
-        public RelClientBuilder QueryFrom(string filename, Action<TransactionAsyncResult> withResult)
-        {
-            string curDir = Directory.GetCurrentDirectory();
-            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Data\Names.txt");
-            var lines = File.ReadAllLines(path);
-            var sb = new StringBuilder();
-            foreach (var line in lines)
-            {
-                sb.AppendLine(line);
-            }
-
-            return Query(sb.ToString(), withResult);
-        }
-
         public RelClientBuilder Then(Action<TransactionAsyncResult> withResult)
         {
             withResult(_result);
             return this;
         }
 
-        public RelClientBuilder WithModels(Action<string> toOutput)
+        public Client ToClient()
         {
-            return Query(RelQueryBuilder
-                .FromResource(Assembly.GetExecutingAssembly(), "GetModelNames.rel"))
-                .Then(result =>
-                {
-                    
-                });
+            return _client;
         }
     }
 }

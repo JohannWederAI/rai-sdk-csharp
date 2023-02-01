@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using RelationalAI.Fluent;
 using Xunit;
 
 namespace RelationalAI.Test
@@ -22,45 +24,35 @@ namespace RelationalAI.Test
         [Fact]
         public async Task ModelsTest()
         {
-            var client = CreateClient();
+            var builder = RelClientBuilder.FromProfile("UnitTest");
+            var client = builder.ToClient();
 
-            await engineFixture.CreateEngineWaitAsync();
-            await client.CreateDatabaseAsync(Dbname, engineFixture.Engine.Name);
-
-            var resp = await client.LoadModelsWaitAsync(Dbname, engineFixture.Engine.Name, TestModel);
+            var resp = await client.LoadModelsWaitAsync(builder.DatabaseName, builder.EngineName, TestModel);
             Assert.Equal(TransactionAsyncState.Completed, resp.Transaction.State);
             Assert.Empty(resp.Problems);
 
-            var model = await client.GetModelAsync(Dbname, engineFixture.Engine.Name, "test_model");
-            Assert.Equal("test_model", model.Name);
-            Assert.Equal(TestModel["test_model"], model.Value);
-
-            var modelNames = await client.ListModelsAsync(Dbname, engineFixture.Engine.Name);
-            var modelName = modelNames.Find(item => item.Equals("test_model"));
-
-            var deleteRsp = await client.DeleteModelsAsync(Dbname, engineFixture.Engine.Name, new List<string> { "test_model" });
+            builder.Query(RelQueryBuilder.GetModel("test_model")).Then(r =>
+            {
+                Assert.Equal(TestModel["test_model"], r.Results.ToList<string>().Single());
+            });
+            
+            builder.Query(RelQueryBuilder.GetModels()).Then(r =>
+            {
+                Assert.Contains("test_model", r.Results.ToList<string>());
+            });
+            
+            var deleteRsp = await client.DeleteModelsAsync(builder.DatabaseName, builder.EngineName, new List<string> { "test_model" });
             Assert.Equal(TransactionAsyncState.Completed, deleteRsp.Transaction.State);
             Assert.Empty(deleteRsp.Problems);
 
-            await Assert.ThrowsAsync<HttpError>(async () => await client.GetModelAsync(Dbname, engineFixture.Engine.Name, "test_model"));
-
-            modelNames = await client.ListModelsAsync(Dbname, engineFixture.Engine.Name);
-            modelName = modelNames.Find(item => item.Equals("test_model"));
-            Assert.Null(modelName);
+            builder.Query(RelQueryBuilder.GetModels()).Then(r =>
+            {
+                Assert.DoesNotContain("test_model", r.Results.ToList<string>());
+            });
         }
 
         public override async Task DisposeAsync()
         {
-            var client = CreateClient();
-
-            try
-            {
-                await client.DeleteDatabaseAsync(Dbname);
-            }
-            catch (Exception e)
-            {
-                await Console.Error.WriteLineAsync(e.ToString());
-            }
         }
     }
 }

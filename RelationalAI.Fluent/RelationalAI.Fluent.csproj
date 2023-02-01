@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>RelationalAI.Fluent</AssemblyName>
+        <RootNamespace>RelationalAI.Fluent</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\RelationalAI\RelationalAI.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.ML" Version="2.0.1-preview.22573.9" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Rel\GetModelNames.rel" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Exceptions" />
+    </ItemGroup>
+
+</Project>

@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
 using System.Threading.Tasks;
+using RelationalAI.Fluent;
 
 namespace RelationalAI.Examples
 {
@@ -32,14 +33,12 @@ namespace RelationalAI.Examples
 
         private static async Task Run(string database, string engine, string profile = "default")
         {
-            var config = Config.Read("", profile);
-            var context = new Client.Context(config);
-            var client = new Client(context);
-            var models = await client.ListModelsAsync(database, engine);
-            foreach (var model in models)
-            {
-                Console.WriteLine(model);
-            }
+            RelClientBuilder
+                .WithConnection(profile)
+                .WithEngine(engine)
+                .WithDatabase(database)
+                .Query(RelQueryBuilder.GetModels())
+                .Then(r => r.Results.ToArrayList().Print(Console.WriteLine));
         }
 
     }

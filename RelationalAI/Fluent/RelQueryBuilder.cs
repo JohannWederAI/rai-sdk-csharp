@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,6 +18,7 @@ namespace RelationalAI.Fluent
     {
         private Assembly _assembly;
         private ArrayList _resources = new ArrayList();
+        private Dictionary<string, string> _parameters = new Dictionary<string, string>();
         private StringBuilder _sb = new StringBuilder();
 
         private RelQueryBuilder()
@@ -36,6 +38,17 @@ namespace RelationalAI.Fluent
             return FromAssembly(assembly)
                 .UseResource(resourceName)
                 .ToBuilder();
+        }
+
+        public static RelQueryBuilder GetModels()
+        {
+            return FromResource(Assembly.GetExecutingAssembly(), "GetModels.rel");
+        }
+
+        public static RelQueryBuilder GetModel(string name)
+        {
+            return FromResource(Assembly.GetExecutingAssembly(), "GetModel.rel")
+                .WithParameter("${name}", name);
         }
 
         public INeedResource UsingAssembly(Assembly assembly)
@@ -69,6 +82,12 @@ namespace RelationalAI.Fluent
                 .ToBuilder();
         }
 
+        public RelQueryBuilder WithParameter(string key, string value)
+        {
+            _parameters.Add(key, value);
+            return this;
+        }
+
         public RelQueryBuilder ToBuilder()
         {
             return this;
@@ -76,7 +95,8 @@ namespace RelationalAI.Fluent
 
         public override string ToString()
         {
-            return _sb.ToString();
+            var query = _sb.ToString();
+            return _parameters.Aggregate(query, (current, pair) => current.Replace(pair.Key, pair.Value));
         }
 
         public RelQueryBuilder Print(Action<string> write)

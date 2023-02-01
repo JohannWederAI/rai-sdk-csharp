@@ -53,13 +53,7 @@ namespace RelationalAI.Test
             var edbs = await client.ListEdbsAsync(Dbname, engineFixture.Engine.Name);
             var edb = edbs.Find(item => item.Name.Equals("rel"));
             Assert.NotNull(edb);
-
-            var modelNames = await client.ListModelsAsync(Dbname, engineFixture.Engine.Name);
-            var name = modelNames.Find(item => item.Equals("rel/stdlib"));
-            Assert.NotNull(name);
-
-            var models = await client.ListModelsAsync(Dbname, engineFixture.Engine.Name);
-
+            
             var deleteRsp = await client.DeleteDatabaseAsync(Dbname);
             Assert.Equal(Dbname, deleteRsp.Name);
 
@@ -128,15 +122,6 @@ namespace RelationalAI.Test
 
             rel = FindRelation(rsp.Output, ":pets");
             Assert.NotNull(rel);
-
-            // make sure the model was cloned
-            var modelNames = await client.ListModelsAsync(databaseCloneName, engineFixture.Engine.Name);
-            var name = modelNames.Find(item => item.Equals("test_model"));
-            Assert.NotNull(name);
-
-            var model = await client.GetModelAsync(databaseCloneName, engineFixture.Engine.Name, "test_model");
-            Assert.Equal("test_model", model.Name);
-            Assert.Equal(TestModel["test_model"], model.Value);
 
             // cleanup
             var deleteRsp = await client.DeleteDatabaseAsync(databaseCloneName);

@@ -183,7 +183,7 @@ namespace RelationalAI.Test.Fluent
             };
 
             var expected = new[] { "String", "Symbol", "Float64", "Symbol", "Symbol" };
-            Assert.Equal(expected, DataTableExtension.DeriveColumnSpec(l));
+            Assert.Equal(expected, Rel.DeriveColumnSpec(l));
         }
 
         [Fact]
@@ -199,7 +199,7 @@ namespace RelationalAI.Test.Fluent
             };
 
             var expected = new[] { "String", "Symbol", "Mixed", "Symbol", "Symbol" };
-            Assert.Equal(expected, DataTableExtension.DeriveColumnSpec(l));
+            Assert.Equal(expected, Rel.DeriveColumnSpec(l));
         }
     }
 }

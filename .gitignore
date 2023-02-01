@@ -2,6 +2,10 @@ RelationalAI.Test/bin
 RelationalAI.Test/obj
 RelationalAI.Examples/bin
 RelationalAI.Examples/obj
+RelationalAI.Fluent/bin
+RelationalAI.Fluent/obj
+RelationalAI.Fluent.Test/bin
+RelationalAI.Fluent.Test/obj
 RelationalAI.Protos/bin
 RelationalAI.Protos/obj
 RelationalAI/bin

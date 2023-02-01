@@ -1,9 +1,7 @@
-using System;
 using System.Reflection;
 using RelationalAI.Fluent;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace RelationalAI.Test.Fluent
 {
@@ -61,6 +59,26 @@ namespace RelationalAI.Test.Fluent
                     .FromResource(Assembly.GetExecutingAssembly(), "rel.fruit.rel")
                     .UseResource(Assembly.GetAssembly(typeof(RelQueryBuilder)), "rel.getmodelnames.rel"))
                 .Then(r => { r.Results.ToDataTable().Print(toOutput); });
+        }
+
+        [Fact]
+        public void TestGetModels()
+        {
+            RelClientBuilder
+                .FromProfile("UnitTest")
+                .Query(RelQueryBuilder.GetModels())
+                .Then(r => r.Results.ToArrayList().Print(toOutput));
+            
+        }
+        
+        [Fact]
+        public void TestGetModel()
+        {
+            RelClientBuilder
+                .FromProfile("UnitTest")
+                .Query(RelQueryBuilder.GetModel("rel/stdlib"))
+                .Then(r => r.Results.ToArrayList().Print(toOutput));
+            
         }
     }
 }
