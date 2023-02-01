@@ -25,7 +25,7 @@ namespace RelationalAI.Test.Fluent
         {
             RelQueryBuilder
                 .FromResource(Assembly.GetExecutingAssembly(), "rel.fruit.rel")
-                .UseResource(Assembly.GetAssembly(typeof(RelQueryBuilder)), "rel.getmodelnames.rel")
+                .UseResource(Assembly.GetAssembly(typeof(RelQueryBuilder)), "rel.getmodels.rel")
                 .ToBuilder()
                 .Print(toOutput);
         }
@@ -57,7 +57,7 @@ namespace RelationalAI.Test.Fluent
                 .WithDatabase("johann-test")
                 .Query(RelQueryBuilder
                     .FromResource(Assembly.GetExecutingAssembly(), "rel.fruit.rel")
-                    .UseResource(Assembly.GetAssembly(typeof(RelQueryBuilder)), "rel.getmodelnames.rel"))
+                    .UseResource(Assembly.GetAssembly(typeof(RelQueryBuilder)), "rel.getmodels.rel"))
                 .Then(r => { r.Results.ToDataTable().Print(toOutput); });
         }
 
